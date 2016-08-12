@@ -64,13 +64,13 @@ public class SpeechRecognizerManager {
 
     public SpeechRecognizerManager(Context context) {
         this.mContext = context;
-        initPockerSphinx();
+        initPockerSphinx(); //여기서 오류나는거 같은데
         initGoogleSpeechRecognizer();
 
     }
 
 
-    private void initPockerSphinx() {
+    private void initPockerSphinx() {//이쪽 에러
 
         new AsyncTask<Void, Void, Exception>() {
             @Override
@@ -104,8 +104,9 @@ public class SpeechRecognizerManager {
                 return null;
             }
 
+
             @Override
-            protected void onPostExecute(Exception result) {
+            protected void onPostExecute(Exception result) {//이부분에서 오류가 떴는데 왜 뜬거지?
                 if (result != null) {
                     Toast.makeText(mContext, "Failed to init mPocketSphinxRecognizer ", Toast.LENGTH_SHORT).show();
                 } else {

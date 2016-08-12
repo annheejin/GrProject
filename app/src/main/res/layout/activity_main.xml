@@ -3,23 +3,61 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
+    android:orientation="vertical"
     tools:context="com.example.heejin.grproject.MainActivity">
 
-    <TextView
-        android:id="@+id/textView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:hint="음성인식 테스트입니다." />
+<TextView
+    android:id="@+id/instruction_langmodel_txt"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content" />
 
-    <ImageView
-        android:id="@+id/imageView"
+    <RadioGroup
+        android:id="@+id/lngModel_radioGroup"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <RadioButton
+            android:id="@+id/langModelFree_radio"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="radiobutton_free"
+            android:checked="true"/>
+
+        <RadioButton
+            android:id="@+id/langModelWeb_radio"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="radiobutton_web"
+            android:checked="true"/>
+
+    </RadioGroup>
+
+    <TextView
+        android:id="@+id/instruction_numResults_txt"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="114dp"
-        android:src="@drawable/icon0"/>
+        android:hint="instructions_numResults"/>
+
+    <EditText
+        android:id="@+id/numResult_editText"
+        android:layout_width="58dp"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:inputType="number"
+        android:layout_gravity="center_vertical">
+        <requestFocus/>
+    </EditText>
+
+    <Button
+        android:id="@+id/speech_btn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="speechbtn"/>
+
+    <ListView
+        android:id="@+id/nbest_listview"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"></ListView>
+
 </LinearLayout>
