@@ -1,29 +1,31 @@
-package com.example.heejin.grproject;
+package com.example.heejin.grproject.Activity;
 
 import android.content.Intent;
 import android.os.Build;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
-import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.heejin.grproject.Gaebi;
+import com.example.heejin.grproject.R;
+
 import java.util.ArrayList;
-import java.util.PriorityQueue;
 
 public class MainActivity extends AppCompatActivity {
-
+    private SpeechRecognizer mRecognizer;
     //언어모델과 인식 결과의 최대값을 위한 default values
     private final static int DEFAULT_NUMBER_RESULTS=10;
     private final static String DEFAULT_LANG_MODEL=RecognizerIntent.LANGUAGE_MODEL_FREE_FORM;
@@ -32,31 +34,56 @@ public class MainActivity extends AppCompatActivity {
     private String languageMode=DEFAULT_LANG_MODEL;
 
     private static final String LOGTAG="ASRBEGIN";
-    private static int ASR_CODE=123;    //이건 무슨 코드야 ?
-
-
+    private static int ASR_CODE=123;
+    private Gaebi mApplication;
+    private boolean isRecognize = false;
     //액티비티 초기화 를 셋업한다.
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        mApplication= Gaebi._instance;
+//        MakeSpeechRecognizer();
         //언어모델과 인식결과의 최대값의 디폴트값을 GUI로 보여준다.
         showDefaultValues();
         setSpeakButton();
-
+        startListening();
 
     }//onCreateEnd
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        stopListening();
+    }
+
+    private void startListening()
+    {
+        Intent i = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);   //음성인식 intent생성
+        i.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, getPackageName()); //데이터 설정
+        i.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "ko-KR"); // "ko-KR");
+
+        mRecognizer = SpeechRecognizer.createSpeechRecognizer(MainActivity.this);    //음성인식 객체
+        mRecognizer.setRecognitionListener(mSTTListener);          //음성인식 리스너 등록
+        mRecognizer.startListening(i);
+    }
+
+    private void stopListening()
+    {
+        if(mRecognizer != null)
+        {
+            mRecognizer.stopListening();
+        }
+    }
     //음성인식 초기화하고 사용자 입력값을 듣기 위한 시작부분
     private void listen(){
         Intent intent=new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,languageMode);
-        intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS,numberRecoResult);
+        intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE,getPackageName());
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE,"ko-KR");
 
         //음성인식 준비시작
-        startActivityForResult(intent,ASR_CODE);
+//        startActivityForResult(intent,ASR_CODE);
     }//listenEnd
 
     private void showDefaultValues(){
@@ -118,7 +145,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 else{
                     setRecognitionParams();
-                    listen();
+//                    listen();
                 }
 
             }
@@ -138,23 +165,17 @@ public class MainActivity extends AppCompatActivity {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH)  //Checks the API level because the confidence scores are supported only from API level 14
                         nBestConfidences = data.getFloatArrayExtra(RecognizerIntent.EXTRA_CONFIDENCE_SCORES);
 
-                    //Creates a collection of strings, each one with a recognition result and its confidence
-                    //following the structure "Phrase matched (conf: 0.5)"
-                    ArrayList<String> nBestView = new ArrayList<String>();
-
-                    for(int i=0; i<nBestList.size(); i++){
-                        if(nBestConfidences!=null){
-                            if(nBestConfidences[i]>=0)
-                                nBestView.add(nBestList.get(i) + " (conf: " + String.format("%.2f", nBestConfidences[i]) + ")");
-                            else
-                                nBestView.add(nBestList.get(i) + " (no confidence value available)");
+                    String[] paths  = getResources().getStringArray(R.array.path);//배열불러오기
+                        for(int i=0;i<paths.length;i++){//배열 for 문 돌리기
+                            for(int j = 0; j<nBestList.size();j++){
+                                if(nBestList.get(j).contains(paths[i])){//String 비교문
+//                                    AsyncTask Backgound Thread
+                                    Toast.makeText(MainActivity.this,paths[i],Toast.LENGTH_SHORT).show();
+                                    break;
+                                    //출력하라
+                                }
+                            }
                         }
-                    }
-
-                    //Includes the collection in the ListView of the GUI
-                    setListView(nBestView);
-
-                    Log.i(LOGTAG, "There were : "+ nBestView.size()+" recognition results");
                 }
             }
             else {
@@ -164,12 +185,80 @@ public class MainActivity extends AppCompatActivity {
         }
     }//onActivityResultEnd
 
-
+    private Handler mHandler = new Handler(){
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            switch (msg.what){
+                case 1:
+                    stopListening();
+                    startListening();
+                    break;
+            }
+        }
+    };
     private void setListView(ArrayList<String>nBestView){
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,android.R.layout.simple_list_item_single_choice,nBestView);
         ListView listView = (ListView)findViewById(R.id.nbest_listview);
         listView.setAdapter(adapter);
     }//setListView End
+    private RecognitionListener mSTTListener = new RecognitionListener(){
 
+        @Override
+        public void onReadyForSpeech(Bundle bundle) {
+            Log.i("onReadyForSpeech","onReadyForSpeech");
+        }
 
+        @Override
+        public void onBeginningOfSpeech() {
+            Log.i("onBeginningOfSpeech","onBeginningOfSpeech");
+        }
+
+        @Override
+        public void onRmsChanged(float v) {
+            Log.i("onRmsChanged","onRmsChanged : "+v);
+        }
+
+        @Override
+        public void onBufferReceived(byte[] bytes) {
+            Log.i("onBufferReceived","onBufferReceived");
+        }
+
+        @Override
+        public void onEndOfSpeech() {
+            Log.i("end of speech","end of speech");
+            if(!isRecognize){
+                mHandler.sendEmptyMessageDelayed(1, 400);
+            }
+        }
+
+        @Override
+        public void onError(int i) {
+            Log.e("error Log"," error no : "+i);
+        }
+
+        @Override
+        public void onResults(Bundle bundle) {
+            ArrayList<String> strs =  bundle.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+            for(String s : strs){
+                Log.i("String TAG" , " recognize String : "+s);
+                if(s.contains("개비")){
+                    Toast.makeText(MainActivity.this,"개비",Toast.LENGTH_SHORT).show();
+                    isRecognize=true;
+                    stopListening();
+                    break;
+                }
+            }
+        }
+
+        @Override
+        public void onPartialResults(Bundle bundle) {
+
+        }
+
+        @Override
+        public void onEvent(int i, Bundle bundle) {
+
+        }
+    };
 }//MainEnd

@@ -1,3 +1,25 @@
 <resources>
     <string name="app_name">GrProject</string>
+    <array name="path">
+        <item>정문</item>
+        <item>가천관</item>
+        <item>예술대학1</item>
+        <item>바이오나노대학</item>
+        <item>공과대학1</item>
+        <item>중앙도서관</item>
+        <item>학군단</item>
+        <item>학생회</item>
+        <item>예술대학2</item>
+        <item>교육대학원</item>
+        <item>글로벌센터</item>
+        <item>법과대학</item>
+        <item>비전타워</item>
+        <item>바이오나노연구원</item>
+        <item>한의과대학</item>
+        <item>공과대학2</item>
+        <item>산학협력관</item>
+        <item>대학원</item>
+        <item>기숙사</item>
+        <item>종합운동장</item>
+    </array>
 </resources>
