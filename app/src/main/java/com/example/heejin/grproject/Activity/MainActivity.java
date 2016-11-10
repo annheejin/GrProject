@@ -1,14 +1,13 @@
 package com.example.heejin.grproject.Activity;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -21,10 +20,11 @@ import android.widget.Toast;
 
 import com.example.heejin.grproject.Gaebi;
 import com.example.heejin.grproject.R;
+import com.example.heejin.grproject.util.VoiceManager;
 
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends Activity {
     private SpeechRecognizer mRecognizer;
     //언어모델과 인식 결과의 최대값을 위한 default values
     private final static int DEFAULT_NUMBER_RESULTS=10;
@@ -36,9 +36,8 @@ public class MainActivity extends AppCompatActivity {
     private static final String LOGTAG="ASRBEGIN";
     private static int ASR_CODE=123;
     private Gaebi mApplication;
-    private boolean isRecognize = false;
     //액티비티 초기화 를 셋업한다.
-
+    private String[] str = {"개비"};
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,34 +47,38 @@ public class MainActivity extends AppCompatActivity {
         //언어모델과 인식결과의 최대값의 디폴트값을 GUI로 보여준다.
         showDefaultValues();
         setSpeakButton();
-        startListening();
-
     }//onCreateEnd
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        mApplication.getmVoiceManager().startListening(MainActivity.this, mHandler, str);
+    }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        stopListening();
+        mApplication.getmVoiceManager().stopListening();
     }
 
-    private void startListening()
-    {
-        Intent i = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);   //음성인식 intent생성
-        i.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, getPackageName()); //데이터 설정
-        i.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "ko-KR"); // "ko-KR");
-
-        mRecognizer = SpeechRecognizer.createSpeechRecognizer(MainActivity.this);    //음성인식 객체
-        mRecognizer.setRecognitionListener(mSTTListener);          //음성인식 리스너 등록
-        mRecognizer.startListening(i);
-    }
-
-    private void stopListening()
-    {
-        if(mRecognizer != null)
-        {
-            mRecognizer.stopListening();
-        }
-    }
+//    private void startListening()
+//    {
+//        Intent i = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);   //음성인식 intent생성
+//        i.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, getPackageName()); //데이터 설정
+//        i.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "ko-KR"); // "ko-KR");
+//
+//        mRecognizer = SpeechRecognizer.createSpeechRecognizer(MainActivity.this);    //음성인식 객체
+//        mRecognizer.setRecognitionListener(mSTTListener);          //음성인식 리스너 등록
+//        mRecognizer.startListening(i);
+//    }
+//
+//    private void stopListening()
+//    {
+//        if(mRecognizer != null)
+//        {
+//            mRecognizer.stopListening();
+//        }
+//    }
     //음성인식 초기화하고 사용자 입력값을 듣기 위한 시작부분
     private void listen(){
         Intent intent=new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
@@ -172,7 +175,7 @@ public class MainActivity extends AppCompatActivity {
 //                                    AsyncTask Backgound Thread
                                     Toast.makeText(MainActivity.this,paths[i],Toast.LENGTH_SHORT).show();
                                     break;
-                                    //출력하라
+
                                 }
                             }
                         }
@@ -190,9 +193,12 @@ public class MainActivity extends AppCompatActivity {
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
             switch (msg.what){
-                case 1:
-                    stopListening();
-                    startListening();
+                case VoiceManager.FAILED_RECOGNIZE:
+                    mApplication.getmVoiceManager().stopListening();
+                    mApplication.getmVoiceManager().startListening(MainActivity.this, mHandler, str);
+                    break;
+                case VoiceManager.SUCCEED_RECOGNIZE:
+                    startActivity(new Intent(MainActivity.this, VideoActivity.class).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
                     break;
             }
         }
@@ -202,63 +208,5 @@ public class MainActivity extends AppCompatActivity {
         ListView listView = (ListView)findViewById(R.id.nbest_listview);
         listView.setAdapter(adapter);
     }//setListView End
-    private RecognitionListener mSTTListener = new RecognitionListener(){
 
-        @Override
-        public void onReadyForSpeech(Bundle bundle) {
-            Log.i("onReadyForSpeech","onReadyForSpeech");
-        }
-
-        @Override
-        public void onBeginningOfSpeech() {
-            Log.i("onBeginningOfSpeech","onBeginningOfSpeech");
-        }
-
-        @Override
-        public void onRmsChanged(float v) {
-            Log.i("onRmsChanged","onRmsChanged : "+v);
-        }
-
-        @Override
-        public void onBufferReceived(byte[] bytes) {
-            Log.i("onBufferReceived","onBufferReceived");
-        }
-
-        @Override
-        public void onEndOfSpeech() {
-            Log.i("end of speech","end of speech");
-            if(!isRecognize){
-                mHandler.sendEmptyMessageDelayed(1, 400);
-            }
-        }
-
-        @Override
-        public void onError(int i) {
-            Log.e("error Log"," error no : "+i);
-        }
-
-        @Override
-        public void onResults(Bundle bundle) {
-            ArrayList<String> strs =  bundle.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-            for(String s : strs){
-                Log.i("String TAG" , " recognize String : "+s);
-                if(s.contains("개비")){
-                    Toast.makeText(MainActivity.this,"개비",Toast.LENGTH_SHORT).show();
-                    isRecognize=true;
-                    stopListening();
-                    break;
-                }
-            }
-        }
-
-        @Override
-        public void onPartialResults(Bundle bundle) {
-
-        }
-
-        @Override
-        public void onEvent(int i, Bundle bundle) {
-
-        }
-    };
 }//MainEnd

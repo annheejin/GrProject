@@ -10,6 +10,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.example.heejin.grproject.Activity.MainActivity;
+import com.example.heejin.grproject.util.VoiceManager;
 
 import java.util.ArrayList;
 
@@ -19,7 +20,7 @@ import java.util.ArrayList;
 public class Gaebi extends Application {
 
     public static Gaebi _instance;
-
+    private VoiceManager mVoiceManager= new VoiceManager();;
     public Gaebi(){
 
     }
@@ -30,11 +31,12 @@ public class Gaebi extends Application {
         _instance = new Gaebi();
     }
 
-
     @Override
     public void onTerminate() {
         super.onTerminate();
     }
 
-
+    public VoiceManager getmVoiceManager() {
+        return mVoiceManager;
+    }
 }
